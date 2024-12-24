@@ -22,6 +22,17 @@ class Map {
     ];
   }
 
+  hasWallAt(x, y) {
+    if (x < 0 || x > WINDOW_WIDTH || y < 0 || y > WINDOW_HEIGHT) {
+      return true;
+    }
+
+    var gridX = Math.floor(x / TILE_SIZE);
+    var gridY = Math.floor(y / TILE_SIZE);
+
+    return (this.grid[gridX][gridY] === 1) ? true : false;
+  }
+
   render() {
     for (var i = 0; i < MAP_NUM_ROWS; i++) {
       for (var j = 0; j < MAP_NUM_COLS; j++) {
@@ -52,9 +63,14 @@ class Player {
     this.rotAngle += this.turnDir * this.rotSpeed;
 
     var moveStep = this.walkDir * this.moveSpeed;
-    this.x += Math.cos(this.rotAngle) * moveStep;
-    this.y += Math.sin(this.rotAngle) * moveStep;
+    var newX = this.x + Math.cos(this.rotAngle) * moveStep;
+    var newY = this.y + Math.sin(this.rotAngle) * moveStep;
 
+    //only set new player position if it is not colliding with walls
+    if (!grid.hasWallAt(newX, newY)) {
+      this.x = newX;
+      this.y = newY;
+    }
   }
 
   render() {
@@ -63,9 +79,10 @@ class Player {
     circle(this.x, this.y, this.radius);
     stroke("red");
     line(
-      this.x, this.y,
+      this.x,
+      this.y,
       this.x + Math.cos(this.rotAngle) * 30,
-      this.y + Math.sin(this.rotAngle) * 30
+      this.y + Math.sin(this.rotAngle) * 30,
     );
   }
 }
@@ -85,11 +102,11 @@ function keyPressed() {
   }
 }
 
-function keyReleased(){
+function keyReleased() {
   if (keyCode == UP_ARROW) {
     player.walkDir = 0;
   } else if (keyCode == DOWN_ARROW) {
-    player.walkDir = 0
+    player.walkDir = 0;
   } else if (keyCode == RIGHT_ARROW) {
     player.turnDir = 0;
   } else if (keyCode == LEFT_ARROW) {
@@ -99,6 +116,7 @@ function keyReleased(){
 
 function setup() {
   createCanvas(WINDOW_WIDTH, WINDOW_HEIGHT);
+  frameRate(60);
 }
 
 function update() {
@@ -106,6 +124,7 @@ function update() {
 }
 
 function draw() {
+  console.log(frameRate());
   update();
 
   grid.render();
