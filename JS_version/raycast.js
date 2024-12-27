@@ -7,7 +7,7 @@ const WINDOW_HEIGHT = MAP_NUM_ROWS * TILE_SIZE;
 
 const FOV_ANGLE = 75 * (Math.PI / 180); //in radians
 
-const WALL_STRIP_WIDTH = 20; //column width in pixels
+const WALL_STRIP_WIDTH = 10; //column width in pixels
 const NUM_RAYS = WINDOW_WIDTH / WALL_STRIP_WIDTH;
 
 const MINIMAP_SCALE_FACTOR = 0.2;
@@ -303,16 +303,17 @@ function render3DProjectedWalls() {
   //loop every ray in the array of rays
   for (var i = 0; i < NUM_RAYS; i++) {
     var ray = rays[i];
-    var rayDistance = ray.distance * Math.cos(ray.rayAngle - player.rotAngle);
-    console.log(rayDistance);
+    var correctWallDistance= ray.distance * Math.cos(ray.rayAngle - player.rotAngle);
 
     // calculate the distance to the projection plane
     var distanceProjPlane = WINDOW_WIDTH / 2 / Math.tan(FOV_ANGLE / 2);
 
     //projected wall height
-    var wallStripHeight = (TILE_SIZE / rayDistance) * distanceProjPlane;
+    var wallStripHeight = (TILE_SIZE / correctWallDistance) * distanceProjPlane;
 
-    fill("rgba(245, 245, 245, 1.0");
+    //compute the transperancy based on wall distance
+    var rgba = "rgba(255,255,255," + (60/ correctWallDistance) + ")";
+    fill(rgba);
     noStroke();
     rect(
       i * WALL_STRIP_WIDTH,
