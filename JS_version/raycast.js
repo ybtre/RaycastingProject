@@ -118,7 +118,7 @@ class Ray {
       this.rayAngle < 0.5 * Math.PI || this.rayAngle > 1.5 * Math.PI;
     this.isRayFacingLeft = !this.isRayFacingRight;
   }
-  cast(columnId) {
+  cast() {
     var xintercept, yintercept;
     var xstep, ystep;
 
@@ -229,15 +229,17 @@ class Ray {
       : Number.MAX_VALUE;
 
     // only store the smallest of the distances
-    this.wallHitX =
-      horzHitDistance < vertHitDistance ? horzWallHitX : vertWallHitX;
-    this.wallHitY =
-      horzHitDistance < vertHitDistance ? horzWallHitY : vertWallHitY;
-
-    this.distance =
-      horzHitDistance < vertHitDistance ? horzHitDistance : vertHitDistance;
-
-    this.wasHitVertical = vertHitDistance < horzHitDistance;
+    if (vertHitDistance < horzHitDistance) {
+      this.wallHitX = vertWallHitX;
+      this.wallHitY = vertWallHitY;
+      this.distance = vertHitDistance;
+      this.wasHitVertical = true;
+    } else {
+      this.wallHitX = horzWallHitX;
+      this.wallHitY = horzWallHitY;
+      this.distance = horzHitDistance;
+      this.wasHitVertical = false;
+    }
   }
   render() {
     stroke("rgba(255, 0, 0, 0.3)");
@@ -279,23 +281,19 @@ function keyReleased() {
 }
 
 function castAllRays() {
-  var colId = 0;
-
   //start first ray by subtracting half of the FOV
   var rayAngle = player.rotAngle - FOV_ANGLE / 2;
 
   rays = [];
 
   //loop all columns casting the rays
-  for (var i = 0; i < NUM_RAYS; i++) {
+  for (var col = 0; col < NUM_RAYS; col++) {
     // for (var i = 0; i < 1; i++) {
     var ray = new Ray(rayAngle);
-    ray.cast(colId);
+    ray.cast();
     rays.push(ray);
 
     rayAngle += FOV_ANGLE / NUM_RAYS;
-
-    colId++;
   }
 }
 
@@ -303,7 +301,8 @@ function render3DProjectedWalls() {
   //loop every ray in the array of rays
   for (var i = 0; i < NUM_RAYS; i++) {
     var ray = rays[i];
-    var correctWallDistance= ray.distance * Math.cos(ray.rayAngle - player.rotAngle);
+    var correctWallDistance =
+      ray.distance * Math.cos(ray.rayAngle - player.rotAngle);
 
     // calculate the distance to the projection plane
     var distanceProjPlane = WINDOW_WIDTH / 2 / Math.tan(FOV_ANGLE / 2);
@@ -311,16 +310,19 @@ function render3DProjectedWalls() {
     //projected wall height
     var wallStripHeight = (TILE_SIZE / correctWallDistance) * distanceProjPlane;
 
+    var alpha = 1; //60
+
+    var color = (ray.wasHitVertical ? 255 : 175);
+
     //compute the transperancy based on wall distance
-    var rgba = "rgba(255,255,255," + (60/ correctWallDistance) + ")";
-    fill(rgba);
+    fill("rgba(" + color + "," + 100 + "," + color + "," + alpha + ")");
     noStroke();
     rect(
       i * WALL_STRIP_WIDTH,
-      (WINDOW_HEIGHT / 2) - (wallStripHeight / 2),
+      WINDOW_HEIGHT / 2 - wallStripHeight / 2,
       WALL_STRIP_WIDTH,
-      wallStripHeight
-    )
+      wallStripHeight,
+    );
   }
 }
 
