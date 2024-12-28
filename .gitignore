@@ -5,3 +5,4 @@
 *.out
 *.plist
 *.exe.yml
+C_version/raycast
