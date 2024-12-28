@@ -9,10 +9,77 @@ import sdl "vendor:sdl2"
 ////////////////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////////////////
-SCREEN_WIDHT :: 320
-SCREEN_HEIGHT :: 160
+WINDOW_WIDHT  :: 320
+WINDOW_HEIGHT :: 160
 
+////////////////////////////////////////////////////////
+// VARIABLES
+////////////////////////////////////////////////////////
+is_game_running : = false
+window          : ^sdl.Window
+renderer        : ^sdl.Renderer
 
+////////////////////////////////////////////////////////
+// FUNCTIONS
+////////////////////////////////////////////////////////
+initialize_window ::proc() -> bool {
+  if (sdl.Init(sdl.INIT_EVERYTHING) != 0 ) {
+    fmt.println("Error initializing SDL - ", sdl.GetErrorString())
+    return false
+  }
+
+  window = sdl.CreateWindow(
+    "Raycaster in Odin",
+    sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
+    WINDOW_WIDHT, WINDOW_HEIGHT,
+    sdl.WINDOW_BORDERLESS | sdl.WINDOW_MOUSE_FOCUS
+  )
+  if window == nil{
+    fmt.println("Error creating SDL Window - ", sdl.GetErrorString())
+    return false
+  }
+
+  renderer = sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE)
+  if renderer == nil {
+    fmt.println("Error creating SDL Renderer - ", sdl.GetErrorString())
+    return false
+  }
+
+  sdl.SetRenderDrawBlendMode(renderer, sdl.BlendMode.BLEND)
+
+  fmt.println("Successfuly initialized Window and Renderer!")
+  return true
+}
+
+////////////////////////////////////////////////////////
+setup ::proc() {
+
+}
+
+////////////////////////////////////////////////////////
+process_input ::proc() {
+
+}
+
+////////////////////////////////////////////////////////
+update :: proc() {
+
+}
+
+////////////////////////////////////////////////////////
+render :: proc() {
+
+}
+
+destroy_window :: proc() {
+  sdl.DestroyRenderer(renderer)
+  sdl.DestroyWindow(window)
+  sdl.Quit()
+}
+
+////////////////////////////////////////////////////////
+// MAIN
+////////////////////////////////////////////////////////
 main :: proc()
 {
 ////////////////////////////////////////////////////////
@@ -38,5 +105,16 @@ main :: proc()
   }
 ////////////////////////////////////////////////////////
 
+  is_game_running = initialize_window()
+
+  setup()
+
+  for is_game_running {
+    process_input()
+    update()
+    render()
+  }
+
+  destroy_window()
 
 }
