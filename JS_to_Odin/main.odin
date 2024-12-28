@@ -9,8 +9,8 @@ import sdl "vendor:sdl2"
 ////////////////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////////////////
-WINDOW_WIDHT  :: 320
-WINDOW_HEIGHT :: 160
+WINDOW_WIDHT  :: 800
+WINDOW_HEIGHT :: 600
 
 ////////////////////////////////////////////////////////
 // VARIABLES
@@ -32,8 +32,7 @@ initialize_window ::proc() -> bool {
     "Raycaster in Odin",
     sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
     WINDOW_WIDHT, WINDOW_HEIGHT,
-    sdl.WINDOW_BORDERLESS | sdl.WINDOW_MOUSE_FOCUS
-  )
+    sdl.WINDOW_BORDERLESS | sdl.WINDOW_MOUSE_FOCUS)
   if window == nil{
     fmt.println("Error creating SDL Window - ", sdl.GetErrorString())
     return false
@@ -58,7 +57,22 @@ setup ::proc() {
 
 ////////////////////////////////////////////////////////
 process_input ::proc() {
+  event : sdl.Event
 
+  for sdl.PollEvent(&event) {
+    #partial switch event.type {
+    case sdl.EventType.QUIT:
+      {
+        is_game_running = false
+      }
+    case sdl.EventType.KEYDOWN:
+      {
+        if event.key.keysym.sym == sdl.Keycode.ESCAPE {
+          is_game_running = false
+        }
+      }
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////
@@ -68,7 +82,10 @@ update :: proc() {
 
 ////////////////////////////////////////////////////////
 render :: proc() {
+  sdl.SetRenderDrawColor(renderer, 0, 0, 0, 255)
+  sdl.RenderClear(renderer)
 
+  sdl.RenderPresent(renderer)
 }
 
 destroy_window :: proc() {
