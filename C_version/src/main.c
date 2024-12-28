@@ -55,17 +55,45 @@ void setup() {
 
 }
 
+void processInput() {
+  SDL_Event event;
+  SDL_PollEvent(&event);
+
+  switch (event.type) {
+    case SDL_QUIT: {
+      isGameRunning = FALSE;
+      break;
+    }
+    case SDL_KEYDOWN: {
+      if (event.key.keysym.sym == SDLK_ESCAPE) {
+        isGameRunning = FALSE;
+      }
+      break;
+    }
+  }
+}
+
+/////////////////////////////////////////////
+void render() {
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  SDL_RenderClear(renderer);
+
+  //
+
+  SDL_RenderPresent(renderer);
+}
+
 /////////////////////////////////////////////
 int main(){
   isGameRunning = initializeWindow();
 
   setup();
 
-  // while (isGameRunning) {
-    // processInput();
+  while (isGameRunning) {
+    processInput();
     // update();
-    // render();
-  // }
+    render();
+  }
 
   destroyWindow();
 
