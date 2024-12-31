@@ -9,8 +9,57 @@ import sdl "vendor:sdl2"
 ////////////////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////////////////
-WINDOW_WIDHT  :: 800
-WINDOW_HEIGHT :: 600
+PI                   :: 3.14159265
+TWO_PI               :: 6.28318530
+
+TILE_SIZE            :: 64
+MAP_NUM_ROWS         :: 13
+MAP_NUM_COLS         :: 20
+
+MINIMAP_SCALE_FACTOR :: 1.0
+
+WINDOW_WIDHT         :: (MAP_NUM_COLS * TILE_SIZE)
+WINDOW_HEIGHT        :: (MAP_NUM_ROWS * TILE_SIZE)
+
+FOV_ANGLE            :: (60 * (PI / 180))
+
+NUM_RAYS             :: WINDOW_WIDHT
+
+FPS                  :: 60
+FRAME_TIME_LENGTH_MS :: (1000 / FPS)
+
+
+////////////////////////////////////////////////////////
+// STRUCTS
+////////////////////////////////////////////////////////
+Player :: struct {
+  x         : f32,
+  y         : f32,
+  width     : f32,
+  height    : f32,
+  turnDir   : i32, // -1 for left, +1 for right
+  walkDir   : i32, // -1 for back, +1 for front
+  rotAngle  : f32,
+  walkSpeed : f32,
+  turnSpeed : f32,
+}
+player : Player
+
+grid := [MAP_NUM_ROWS][MAP_NUM_COLS]i32 {
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1, 1, 1, 1, 1, 1, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+}
 
 ////////////////////////////////////////////////////////
 // VARIABLES
@@ -18,6 +67,7 @@ WINDOW_HEIGHT :: 600
 is_game_running : = false
 window          : ^sdl.Window
 renderer        : ^sdl.Renderer
+ticksLastFrame  : u32
 
 ////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -52,7 +102,35 @@ initialize_window ::proc() -> bool {
 
 ////////////////////////////////////////////////////////
 setup ::proc() {
+  player.x = WINDOW_WIDHT / 2
+  player.y = WINDOW_HEIGHT / 2
+  player.width = 5
+  player.height = 5
+  player.turnDir = 0
+  player.walkDir = 0
+  player.rotAngle = PI / 2
+  player.walkSpeed = 100
+  player.turnSpeed = 45 * ( PI / 180 )
+}
 
+////////////////////////////////////////////////////////
+renderMap :: proc() {
+  for i:i32 = 0; i < MAP_NUM_ROWS; i+=1 {
+    for j:i32 = 0; j < MAP_NUM_COLS; j+=1 {
+      tileX := j * TILE_SIZE
+      tileY := i * TILE_SIZE
+      tileColor : u8 = grid[i][j] != 0 ? 225 : 0
+
+      sdl.SetRenderDrawColor(renderer, tileColor, tileColor, tileColor, 255)
+      mapTileRect : sdl.Rect = {
+        i32(cast(f32)tileX * MINIMAP_SCALE_FACTOR),
+        i32(cast(f32)tileY * MINIMAP_SCALE_FACTOR),
+        i32(sdl.floorf(cast(f32)TILE_SIZE * MINIMAP_SCALE_FACTOR)),
+        i32(sdl.floorf(cast(f32)TILE_SIZE * MINIMAP_SCALE_FACTOR)),
+      }
+      sdl.RenderFillRect(renderer, &mapTileRect)
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////
@@ -77,13 +155,30 @@ process_input ::proc() {
 
 ////////////////////////////////////////////////////////
 update :: proc() {
+  timeToWait : u32 = FRAME_TIME_LENGTH_MS - (sdl.GetTicks() - ticksLastFrame)
 
+  if timeToWait > 0 && timeToWait <= FRAME_TIME_LENGTH_MS {
+    sdl.Delay(timeToWait)
+  }
+
+  dt : u32 = (sdl.GetTicks() - ticksLastFrame) / 1000.0
+  ticksLastFrame = sdl.GetTicks()
+
+  //Update Game Objects Area
+  {
+
+  }
 }
 
 ////////////////////////////////////////////////////////
 render :: proc() {
   sdl.SetRenderDrawColor(renderer, 0, 0, 0, 255)
   sdl.RenderClear(renderer)
+
+  //Render Game Objects Area
+  {
+    renderMap()
+  }
 
   sdl.RenderPresent(renderer)
 }
