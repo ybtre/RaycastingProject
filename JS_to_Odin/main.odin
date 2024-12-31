@@ -122,6 +122,12 @@ renderMap :: proc() {
       tileColor : u8 = grid[i][j] != 0 ? 225 : 0
 
       sdl.SetRenderDrawColor(renderer, tileColor, tileColor, tileColor, 255)
+      /*////////////////////////////////////////////////////////
+      the problem was caused due to the order I was manually casting
+      stuff and the order C automatically casts.
+      I have to cast the ints to floats, multiply them 
+      and only then cast the result back to ints so as not to get a 0 value.
+      *///////////////////////////////////////////////////////// 
       mapTileRect : sdl.Rect = {
         i32(cast(f32)tileX * MINIMAP_SCALE_FACTOR),
         i32(cast(f32)tileY * MINIMAP_SCALE_FACTOR),
