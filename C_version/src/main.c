@@ -85,13 +85,46 @@ void setup() {
   //initialize and setup game objects
   player.x         = WINDOW_WIDTH / 2;
   player.y         = WINDOW_HEIGHT / 2;
-  player.width     = 5;
-  player.height    = 5;
+  player.width     = 1;
+  player.height    = 1;
   player.turnDir   = 0;
   player.walkDir   = 0;
   player.rotAngle  = PI / 2;
-  player.walkSpeed = 100;
-  player.turnSpeed = 45 * (PI / 180);
+  player.walkSpeed = 50;
+  player.turnSpeed = 90 * (PI / 180);
+}
+
+/////////////////////////////////////////////
+void movePlayer(float dt) {
+  player.rotAngle += player.turnDir * player.turnSpeed * dt;
+
+  float moveStep = player.walkDir * player.walkSpeed * dt;
+
+  float newPlayerX = player.x + cos(player.rotAngle) * moveStep;
+  float newPlayerY = player.y + sin(player.rotAngle) * moveStep;
+
+  player.x = newPlayerX;
+  player.y = newPlayerY;
+}
+
+/////////////////////////////////////////////
+void renderPlayer() {
+  SDL_SetRenderDrawColor(renderer, 245, 245, 0, 255);
+  SDL_Rect playerRect = {
+    player.x * MINIMAP_SCALE_FACTOR,
+    player.y * MINIMAP_SCALE_FACTOR,
+    player.width * MINIMAP_SCALE_FACTOR,
+    player.height * MINIMAP_SCALE_FACTOR
+  };
+  SDL_RenderFillRect(renderer, &playerRect);
+
+  SDL_RenderDrawLine(
+    renderer,
+    MINIMAP_SCALE_FACTOR * player.x,
+    MINIMAP_SCALE_FACTOR * player.y,
+    MINIMAP_SCALE_FACTOR * player.x + cos(player.rotAngle) * 40,
+    MINIMAP_SCALE_FACTOR * player.y + sin(player.rotAngle) * 40
+  );
 }
 
 /////////////////////////////////////////////
@@ -128,6 +161,33 @@ void processInput() {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         isGameRunning = FALSE;
       }
+      if (event.key.keysym.sym == SDLK_UP) {
+        player.walkDir = +1;
+      }
+      if (event.key.keysym.sym == SDLK_DOWN) {
+        player.walkDir = -1;
+      }
+      if (event.key.keysym.sym == SDLK_LEFT) {
+        player.turnDir = -1;
+      }
+      if (event.key.keysym.sym == SDLK_RIGHT) {
+        player.turnDir = +1;
+      }
+      break;
+    }
+    case SDL_KEYUP: {
+      if (event.key.keysym.sym == SDLK_UP) {
+        player.walkDir = 0;
+      }
+      if (event.key.keysym.sym == SDLK_DOWN) {
+        player.walkDir = 0;
+      }
+      if (event.key.keysym.sym == SDLK_LEFT) {
+        player.turnDir = 0;
+      }
+      if (event.key.keysym.sym == SDLK_RIGHT) {
+        player.turnDir = 0;
+      }
       break;
     }
   }
@@ -146,6 +206,7 @@ void update() {
 
   //Update Game Objects Area
   {
+    movePlayer(dt);
   }
 }
 
@@ -158,7 +219,7 @@ void render() {
   {
     renderMap();
     // renderRays();
-    // renderPlayer();
+    renderPlayer();
   }
 
   SDL_RenderPresent(renderer);
