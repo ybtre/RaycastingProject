@@ -109,8 +109,42 @@ setup ::proc() {
   player.turnDir = 0
   player.walkDir = 0
   player.rotAngle = PI / 2
-  player.walkSpeed = 100
-  player.turnSpeed = 45 * ( PI / 180 )
+  player.walkSpeed = 50
+  player.turnSpeed = 90 * ( PI / 180 )
+}
+
+////////////////////////////////////////////////////////
+movePlayer :: proc(dt : f32) {
+  player.rotAngle += cast(f32)player.turnDir * player.turnSpeed * dt
+
+  moveStep := cast(f32)player.walkDir * player.walkSpeed * dt
+
+  newPlayerX := player.x + sdl.cosf(player.rotAngle) * moveStep
+  newPlayerY := player.y + sdl.sinf(player.rotAngle) * moveStep
+
+  player.x = newPlayerX
+  player.y = newPlayerY
+}
+
+
+////////////////////////////////////////////////////////
+renderPlayer :: proc() {
+  sdl.SetRenderDrawColor(renderer, 245, 245, 0, 255)
+  playerRect : sdl.Rect = {
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.x),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.y),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.width),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.height),
+  }
+  sdl.RenderFillRect(renderer, &playerRect)
+
+  sdl.RenderDrawLine(
+    renderer,
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.x),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.y),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.x + sdl.cosf(player.rotAngle) * 40),
+    i32(MINIMAP_SCALE_FACTOR * cast(f32)player.y + sdl.sinf(player.rotAngle) * 40),
+  )
 }
 
 ////////////////////////////////////////////////////////
@@ -154,6 +188,33 @@ process_input ::proc() {
         if event.key.keysym.sym == sdl.Keycode.ESCAPE {
           is_game_running = false
         }
+        if event.key.keysym.sym == sdl.Keycode.UP {
+          player.walkDir = +1
+        }
+        if event.key.keysym.sym == sdl.Keycode.DOWN {
+          player.walkDir = -1
+        }
+        if event.key.keysym.sym == sdl.Keycode.LEFT {
+          player.turnDir = -1
+        }
+        if event.key.keysym.sym == sdl.Keycode.RIGHT {
+          player.turnDir = +1
+        }
+      }
+    case sdl.EventType.KEYUP:
+      {
+        if event.key.keysym.sym == sdl.Keycode.UP {
+          player.walkDir = 0 
+        }
+        if event.key.keysym.sym == sdl.Keycode.DOWN {
+          player.walkDir = 0
+        }
+        if event.key.keysym.sym == sdl.Keycode.LEFT {
+          player.turnDir = 0
+        }
+        if event.key.keysym.sym == sdl.Keycode.RIGHT {
+          player.turnDir = 0
+        }
       }
     }
   }
@@ -167,12 +228,12 @@ update :: proc() {
     sdl.Delay(timeToWait)
   }
 
-  dt : u32 = (sdl.GetTicks() - ticksLastFrame) / 1000.0
+  dt : f32 = f32(sdl.GetTicks() - ticksLastFrame) / 1000.0
   ticksLastFrame = sdl.GetTicks()
 
   //Update Game Objects Area
   {
-
+    movePlayer(dt)
   }
 }
 
@@ -184,6 +245,7 @@ render :: proc() {
   //Render Game Objects Area
   {
     renderMap()
+    renderPlayer()
   }
 
   sdl.RenderPresent(renderer)
